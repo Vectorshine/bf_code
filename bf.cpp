@@ -73,13 +73,13 @@ int main()
         int set_res = (true_check.find(s) != true_check.end());
         // printf("%d %d\n", set_res, bf_res);
         if(bf_res & set_res)
-            tp++;//在集合中存在，且bf检测中也存在
+            tp++;//存在，且bf检测中也存在
         else if((!bf_res) & set_res)
-            tn++;//在集合中存在，但是bf检测不存在  永远是0
+            tn++;//存在，但是bf检测不存在  永远是0
         else if(bf_res & (!set_res))
-            fp++;//在集合中不存在，但是bf检测存在
+            fp++;//不存在，但是bf检测存在
         else
-            fn++;//在集合中不存在，bf检测也不存在
+            fn++;//不存在，bf检测也不存在
     }
     printf("tp : %lf \n", tp*1.0/size);
     printf("tn : %lf \n", tn*1.0/size);
