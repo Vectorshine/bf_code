@@ -43,7 +43,7 @@ void bloom_destroy(bloom_filter b);
 int main()
 {
     const int size = 655371;
-    bloom_filter b1 = bloom_init(size, sdbmhash);//创建一个bf结构
+    bloom_filter b1 = bloom_init(size, jshash);//创建一个bf结构
     for (int i = 0; i < size / 2; i += 2)
     {
         char *s=stringRandom(15);
@@ -56,15 +56,6 @@ int main()
     }
     printf("insert ok \n");
 
-    int cnt = 0;
-    
-    // set<char *>::iterator iter = true_check.begin();
-    // while (iter != true_check.end())
-    // {
-    //     cout<<*iter;
-    //     cout << bloom_check(b1, *iter, sizeof(*iter)) << endl;
-    //     iter++;
-    // } 
     int tp = 0, tn = 0, fp = 0, fn = 0;
     for (int i = 0; i < size; i++)
     {
