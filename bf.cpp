@@ -1,27 +1,14 @@
-/*
-（转自: http://www.felix021.com/blog/read.php?1882）
-
-布隆过滤器的详细介绍和典型用途，可参见
-Wikipedia：http://en.wikipedia.org/wiki/Bloom_filter
-谷歌黑板报（数学之美）：http://www.google.cn/ggblog/googlechinablog/2007/07/bloom-filter_7469.html
-
-下面是一个简单的布隆过滤器的C/C++实现，以及使用例程。使用sdbmhash字符串hash方法来进行hash。
-*/
-#include <stdio.h>
-#include<string.h>
-#include <stdlib.h>
 #include <string.h>
 #include<random>
 #include<iostream>
 #include<set>
-#define fun_num 2
+#include"hash.h"
+#define fun_num 6
 using namespace std;
 char* stringRandom(int length);
 
 set<char *> true_check;
-unsigned int jshash(const char *s, unsigned size);
-unsigned int sdbmhash(const char *s, unsigned size);
-
+const int using_fun_num = 6;
 /* ------------- bloom types and funcs --------------- */
 const unsigned char masks[8] = {0x01,0x02,0x04,0x08,0x10,0x20,0x40,0x80};
 
@@ -45,9 +32,10 @@ void bloom_destroy(bloom_filter b);
 int main()
 {
     const int size = 655371;
-    hash_func_ptr hash[fun_num] = {sdbmhash, jshash};
+    // hash_func_ptr hash[fun_num] = {sdbmhash,jshash,bkdrhash,aphash,};
+    hash_func_ptr hash[fun_num] = {sdbmhash,jshash,bkdrhash,aphash,djbhash,rshash};
     bloom_filter b1 = bloom_init(size, hash);//创建一个bf结构
-    for (int i = 0; i < size / 2; i ++)
+    for (int i = 0; i < size / 4; i ++)
     {
         char *s=stringRandom(15);
         true_check.insert(s);
@@ -122,7 +110,7 @@ bloom_filter bloom_init (unsigned n, hash_func_ptr hash[])
     b->size = (n + 7) / 8;
     // *b->hash = *hash;
     // memcpy(b->hash,hash,sizeof(hash_func_ptr));
-    for(int i = 0; i < fun_num; i++)
+    for(int i = 0; i < using_fun_num; i++)
     {
         b->hash[i] = hash[i];
     }
@@ -138,7 +126,7 @@ bloom_filter bloom_init (unsigned n, hash_func_ptr hash[])
 
 int bloom_insert(bloom_filter b, void *data, unsigned size)
 {
-    for(int i = 0; i < fun_num; i++)
+    for(int i = 0; i < using_fun_num; i++)
     {
         unsigned h = b->hash[i]((const char *)data, size) % (b->n);
         unsigned idx = h / 8;
@@ -156,7 +144,7 @@ int bloom_insert(bloom_filter b, void *data, unsigned size)
 int bloom_check(bloom_filter b, void *data, unsigned size)
 {
     bool ret = 1;
-    for(int i = 0; i < fun_num; i++)
+    for(int i = 0; i < using_fun_num; i++)
     {
         unsigned h = b->hash[i]((const char *)data, size) % (b->n);
         unsigned idx = h / 8;
@@ -178,32 +166,4 @@ void bloom_destroy(bloom_filter b)
             free(b->bits);
         free(b);
     }
-}
-
-//-----------------------------------------------
-
-//使用jshash方法
-unsigned int jshash(const char *s, unsigned size)
-{
-    int hash = 1315423911;
-    unsigned len = 0;
-    while (len < size)
-    {
-        hash ^= (hash << 5) + s[len] + (hash >> 2);
-        len++;
-    }
-    return (hash & 0x7fffffffl);
-}
-//sdbhash方法
-unsigned int sdbmhash(const char *s, unsigned size)
-{
-    int hash = 0;
-    unsigned len = 0;
-    // printf("%s  %d\n", s, s);
-    while (len < size)
-    {
-        hash = (hash << 6) + (hash << 16) - hash + s[len];
-        len++;
-    }
-    return (hash & 0x7fffffffl);
 }
