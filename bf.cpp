@@ -13,6 +13,7 @@ Wikipedia：http://en.wikipedia.org/wiki/Bloom_filter
 #include<random>
 #include<iostream>
 #include<set>
+#define fun_num 1
 using namespace std;
 char* stringRandom(int length);
 
@@ -30,7 +31,7 @@ struct __bloom_filter
     unsigned n;
     unsigned size;//数组的规模
     unsigned char *bits;//位数组
-    hash_func_ptr hash;//选取的哈希函数
+    hash_func_ptr hash[fun_num];//选取的哈希函数
 };
 typedef struct __bloom_filter* bloom_filter;
 
@@ -43,7 +44,8 @@ void bloom_destroy(bloom_filter b);
 int main()
 {
     const int size = 655371;
-    bloom_filter b1 = bloom_init(size, jshash);//创建一个bf结构
+    hash_func_ptr hash[fun_num] = {sdbmhash};
+    bloom_filter b1 = bloom_init(size, *hash);//创建一个bf结构
     for (int i = 0; i < size / 2; i += 2)
     {
         char *s=stringRandom(15);
@@ -117,7 +119,7 @@ bloom_filter bloom_init (unsigned n, hash_func_ptr hash)
 
     b->n = n;
     b->size = (n + 7) / 8;
-    b->hash = hash;
+    *b->hash = hash;
 
     b->bits = (unsigned char *)malloc(b->size);
     memset(b->bits, 0, b->size);
@@ -131,28 +133,36 @@ bloom_filter bloom_init (unsigned n, hash_func_ptr hash)
 
 int bloom_insert(bloom_filter b, void *data, unsigned size)
 {
-    unsigned h = b->hash((const char *)data, size) % (b->n);
-    unsigned idx = h / 8;
-    if (idx >= b->size)
+    for(int i = 0; i < fun_num; i++)
     {
-        fprintf(stderr, "bloom_insert: hash value overflow\n");
-        return 0;
+        unsigned h = b->hash[i]((const char *)data, size) % (b->n);
+        unsigned idx = h / 8;
+        if (idx >= b->size)
+        {
+            fprintf(stderr, "bloom_insert: hash value overflow\n");
+            return 0;
+        }
+        b->bits[idx] |= masks[h % 8];
     }
-    b->bits[idx] |= masks[h % 8];
     //printf("h = %2d, idx = %2d, bit = %2d\n", h, idx, h % 8);
     return 1;
 }
 
 int bloom_check(bloom_filter b, void *data, unsigned size)
 {
-    unsigned h = b->hash((const char *)data, size) % (b->n);
-    unsigned idx = h / 8;
-    if (idx >= b->size)
+    bool ret = 1;
+    for(int i = 0; i < fun_num; i++)
     {
-        fprintf(stderr, "bloom_insert: hash value overflow\n");
-        exit(1);
-    }
-    return !!(b->bits[idx] & masks[h % 8]);
+        unsigned h = b->hash[i]((const char *)data, size) % (b->n);
+        unsigned idx = h / 8;
+        if (idx >= b->size)
+        {
+            fprintf(stderr, "bloom_insert: hash value overflow\n");
+            exit(1);
+        }
+        ret = (!!(b->bits[idx] & masks[h % 8])) & ret;
+    }    
+    return ret;
 }
 
 void bloom_destroy(bloom_filter b)
