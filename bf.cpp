@@ -2,13 +2,15 @@
 #include<random>
 #include<iostream>
 #include<set>
+#include <ctime>
 #include"hash.h"
 #define fun_num 6
 using namespace std;
 char* stringRandom(int length);
+int intRandom(int seed);
 
 set<char *> true_check;
-const int using_fun_num = 6;
+const int using_fun_num = 1;
 /* ------------- bloom types and funcs --------------- */
 const unsigned char masks[8] = {0x01,0x02,0x04,0x08,0x10,0x20,0x40,0x80};
 
@@ -31,13 +33,18 @@ void bloom_destroy(bloom_filter b);
 
 int main()
 {
-    const int size = 655371;
-    // hash_func_ptr hash[fun_num] = {sdbmhash,jshash,bkdrhash,aphash,};
+    const int size = 655371;//位数组长度
     hash_func_ptr hash[fun_num] = {sdbmhash,jshash,bkdrhash,aphash,djbhash,rshash};
     bloom_filter b1 = bloom_init(size, hash);//创建一个bf结构
-    for (int i = 0; i < size / 4; i ++)
+    for (int i = 0; i < size / 2; i ++)
     {
-        char *s=stringRandom(15);
+        // char *s=stringRandom(15);字符串
+
+        //整型
+        int num = intRandom(i);
+        char s[15];
+        itoa(num, s, 15);
+
         true_check.insert(s);
         if (!bloom_insert(b1,s, sizeof(s)))
         {
@@ -50,7 +57,13 @@ int main()
     int tp = 0, tn = 0, fp = 0, fn = 0;
     for (int i = 0; i < size; i++)
     {
-        char *s=stringRandom(15);
+        // char *s=stringRandom(15);字符串
+
+        //整型
+        int num = intRandom(i);
+        char s[15];
+        itoa(num, s, 15);
+
         int bf_res = bloom_check(b1, s,sizeof(s));
         int set_res = (true_check.find(s) != true_check.end());
         // printf("%d %d\n", set_res, bf_res);
@@ -70,6 +83,15 @@ int main()
     return 0;
 }
 
+int intRandom(int seed)
+{
+    long long k = seed * 655371 * 655371;
+    srand( k & 0x7fffffff);  // 产生随机种子  把0换成NULL也行
+    int ret = rand();
+    // cout << ret << endl;
+    return ret;
+}
+
 char* stringRandom(int length)
 {
     //生成长度为length的随记字符串
@@ -77,7 +99,7 @@ char* stringRandom(int length)
     int flag;
     if((str=(char*)malloc(length+1)) == NULL)
     {//分配内存如果失败
-        printf("ai si bi\n");
+        printf("分配内存失败\n");
         return NULL;
     }	
     for (int i = 0; i < length; i++)
@@ -91,7 +113,7 @@ char* stringRandom(int length)
             str[i] = 'a' + rand()%26; 
         }
     }
-    //注意在最后一定要加上'\0'注意斜杠的方向
+    //最后一定要加上'\0'
     str[length]='\0';
     return str;
 }

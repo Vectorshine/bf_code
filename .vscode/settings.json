@@ -10,6 +10,7 @@
         "xtree": "cpp",
         "iostream": "cpp",
         "set": "cpp",
-        "xutility": "cpp"
+        "xutility": "cpp",
+        "ostream": "cpp"
     }
 }
