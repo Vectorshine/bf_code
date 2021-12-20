@@ -21,13 +21,10 @@ const unsigned char masks[8] = {0x01,0x02,0x04,0x08,0x10,0x20,0x40,0x80};
 typedef unsigned (*hash_func_ptr)(const char *buffer, unsigned size);
 struct __bloom_filter
 {
-    union{
-      unsigned n;
-      char * s;
-    } data;
-    unsigned size;
-    unsigned char *bits;
-    hash_func_ptr hash;
+    unsigned n;
+    unsigned size;//数组的规模
+    unsigned char *bits;//位数组
+    hash_func_ptr hash;//选取的哈希函数
 };
 typedef struct __bloom_filter* bloom_filter;
 
@@ -84,7 +81,7 @@ bloom_filter bloom_init (unsigned n, hash_func_ptr hash)
         return NULL;
     }
 
-    b->data.n   = n;
+    b->n = n;
     b->size = (n + 7) / 8;
     b->hash = hash;
 
@@ -100,7 +97,7 @@ bloom_filter bloom_init (unsigned n, hash_func_ptr hash)
 
 int bloom_insert(bloom_filter b, void *data, unsigned size)
 {
-    unsigned h = b->hash((const char *)data, size) % (b->data.n);
+    unsigned h = b->hash((const char *)data, size) % (b->n);
     unsigned idx = h / 8;
     if (idx >= b->size)
     {
@@ -114,7 +111,7 @@ int bloom_insert(bloom_filter b, void *data, unsigned size)
 
 int bloom_check(bloom_filter b, void *data, unsigned size)
 {
-    unsigned h = b->hash((const char *)data, size) % (b->data.n);
+    unsigned h = b->hash((const char *)data, size) % (b->n);
     unsigned idx = h / 8;
     if (idx >= b->size)
     {
