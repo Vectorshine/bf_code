@@ -8,12 +8,13 @@ Wikipedia：http://en.wikipedia.org/wiki/Bloom_filter
 下面是一个简单的布隆过滤器的C/C++实现，以及使用例程。使用sdbmhash字符串hash方法来进行hash。
 */
 #include <stdio.h>
+#include<string.h>
 #include <stdlib.h>
 #include <string.h>
 #include<random>
 #include<iostream>
 #include<set>
-#define fun_num 1
+#define fun_num 2
 using namespace std;
 char* stringRandom(int length);
 
@@ -35,7 +36,7 @@ struct __bloom_filter
 };
 typedef struct __bloom_filter* bloom_filter;
 
-bloom_filter bloom_init (unsigned n, hash_func_ptr hash);//申请那么大的空间数组，并且初始化
+bloom_filter bloom_init (unsigned n, hash_func_ptr hash[]);//申请那么大的空间数组，并且初始化
 int bloom_insert(bloom_filter b, void *data, unsigned size);//插入了size的一半的数
 int bloom_check(bloom_filter b, void *data, unsigned size);//检查元素是否被插入
 void bloom_destroy(bloom_filter b);
@@ -44,9 +45,9 @@ void bloom_destroy(bloom_filter b);
 int main()
 {
     const int size = 655371;
-    hash_func_ptr hash[fun_num] = {sdbmhash};
-    bloom_filter b1 = bloom_init(size, *hash);//创建一个bf结构
-    for (int i = 0; i < size / 2; i += 2)
+    hash_func_ptr hash[fun_num] = {sdbmhash, jshash};
+    bloom_filter b1 = bloom_init(size, hash);//创建一个bf结构
+    for (int i = 0; i < size / 2; i ++)
     {
         char *s=stringRandom(15);
         true_check.insert(s);
@@ -108,7 +109,7 @@ char* stringRandom(int length)
 }
 
 
-bloom_filter bloom_init (unsigned n, hash_func_ptr hash)
+bloom_filter bloom_init (unsigned n, hash_func_ptr hash[])
 {
     bloom_filter b = (bloom_filter)malloc(sizeof(__bloom_filter));
     if (b == NULL)
@@ -119,8 +120,12 @@ bloom_filter bloom_init (unsigned n, hash_func_ptr hash)
 
     b->n = n;
     b->size = (n + 7) / 8;
-    *b->hash = hash;
-
+    // *b->hash = *hash;
+    // memcpy(b->hash,hash,sizeof(hash_func_ptr));
+    for(int i = 0; i < fun_num; i++)
+    {
+        b->hash[i] = hash[i];
+    }
     b->bits = (unsigned char *)malloc(b->size);
     memset(b->bits, 0, b->size);
     if (b->bits == NULL)

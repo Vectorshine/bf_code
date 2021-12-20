@@ -9,6 +9,7 @@
         "map": "cpp",
         "xtree": "cpp",
         "iostream": "cpp",
-        "set": "cpp"
+        "set": "cpp",
+        "xutility": "cpp"
     }
 }
