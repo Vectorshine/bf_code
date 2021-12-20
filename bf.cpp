@@ -24,7 +24,7 @@ struct __bloom_filter
     union data{
       unsigned n;
       char * s;
-    }
+    };
     unsigned size;
     unsigned char *bits;
     hash_func_ptr hash;
