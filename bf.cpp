@@ -21,7 +21,10 @@ const unsigned char masks[8] = {0x01,0x02,0x04,0x08,0x10,0x20,0x40,0x80};
 typedef unsigned (*hash_func_ptr)(const char *buffer, unsigned size);
 struct __bloom_filter
 {
-    unsigned n;
+    union data{
+      unsigned n;
+      char * s;
+    }
     unsigned size;
     unsigned char *bits;
     hash_func_ptr hash;
